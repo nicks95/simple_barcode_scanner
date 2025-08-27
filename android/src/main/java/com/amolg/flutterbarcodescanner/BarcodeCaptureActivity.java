@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.BroadcastReceiver;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.Build;
@@ -95,6 +96,8 @@ public final class BarcodeCaptureActivity extends AppCompatActivity implements B
         ONLY_QR_CODE,
         ONLY_BARCODE
     }
+
+    private BroadcastReceiver finishBroadcast;
 
     private CameraSource mCameraSource;
     private CameraSourcePreview mPreview;
@@ -307,6 +310,21 @@ public final class BarcodeCaptureActivity extends AppCompatActivity implements B
     protected void onResume() {
         super.onResume();
         startCameraSource();
+        finishBroadcast = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context arg0, Intent intent) {
+                String action = intent.getAction();
+                if (action.equals("closeScanner")) {
+                    finish();
+                }
+            }
+        };
+         if (Build.VERSION.SDK_INT >= 34) { // Android 14 (API level 34)
+        //  2 is for Context.RECEIVER_EXPORTED
+            registerReceiver(finishBroadcast, new IntentFilter("closeScanner"), 2);
+        } else {
+            registerReceiver(finishBroadcast, new IntentFilter("closeScanner"));
+        }
     }
 
     /**
